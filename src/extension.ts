@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { parseAlertRules, findViolations } from './alertRules';
+import { recordHit } from './reviewPrompt';
 
 let diagnostics: vscode.DiagnosticCollection;
 
@@ -7,7 +8,7 @@ function isYamlFile(document: vscode.TextDocument): boolean {
   return document.uri.path.endsWith('.yml') || document.uri.path.endsWith('.yaml');
 }
 
-function refresh(document: vscode.TextDocument): void {
+function refresh(context: vscode.ExtensionContext, document: vscode.TextDocument): void {
   if (!isYamlFile(document)) return;
 
   const rules = parseAlertRules(document.getText());
@@ -26,6 +27,7 @@ function refresh(document: vscode.TextDocument): void {
     const diagnostic = new vscode.Diagnostic(range, violation.message, severity);
     diagnostic.source = 'Prometheus Alert Rule Companion';
     diagnostic.code = violation.kind;
+    recordHit(context, `${document.uri.toString()}:${line}`);
     return diagnostic;
   });
   diagnostics.set(document.uri, result);
@@ -35,11 +37,11 @@ export function activate(context: vscode.ExtensionContext): void {
   diagnostics = vscode.languages.createDiagnosticCollection('prometheusAlertRuleCompanion');
   context.subscriptions.push(diagnostics);
 
-  vscode.workspace.textDocuments.forEach(refresh);
+  vscode.workspace.textDocuments.forEach((doc) => refresh(context, doc));
 
   context.subscriptions.push(
-    vscode.workspace.onDidOpenTextDocument(refresh),
-    vscode.workspace.onDidChangeTextDocument((event) => refresh(event.document)),
+    vscode.workspace.onDidOpenTextDocument((doc) => refresh(context, doc)),
+    vscode.workspace.onDidChangeTextDocument((event) => refresh(context, event.document)),
     vscode.workspace.onDidCloseTextDocument((document) => diagnostics.delete(document.uri)),
   );
 }
