@@ -2,7 +2,7 @@
   "name": "prometheus-alert-rule-companion",
   "displayName": "Prometheus Alert Rule Companion",
   "description": "Lints Prometheus alert rule YAML -- duplicate alert names, missing 'for', missing annotations, empty expr -- a text-only subset of pint's checks. No data leaves your editor.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "GapHunterLabs",
   "icon": "images/icon.png",
   "license": "Apache-2.0",
